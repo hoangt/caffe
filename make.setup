@@ -1,0 +1,17 @@
+#===================
+reinstall:
+	@make -j8 clean
+	@make -j8 all | tee logs/install.log
+	@make -j8 pycaffe
+
+retest:
+	@make -j8 test | tee logs/test.log
+	@make -j8 runtest | tee logs/runtest.log
+	@make -j8 pytest | tee logs/pytest.log
+
+remake:
+	@make re-install
+	@make re-test                     
+
+upstream:
+	@git pull https://github.com/BVLC/caffe.git master

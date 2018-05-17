@@ -1,0 +1,47 @@
+CAFFE_DIR = /home/hoangt/WORK/TOOLS/DeepLearning/caffe/cpu-caffe
+
+OUT_DIR 	  = output/cpu
+USE_GPU     = 0
+CAFFE       = ./build/tools/caffe
+
+#======================================================
+BM_NAME  	  = mnist
+BM_DIR 		  = examples/${BM_NAME}
+BM_NET 		  = lenet_train_test.prototxt
+CAFFE_CMDS  = time
+CAFFE_FLAGS = 
+
+ifeq ($(USE_GPU), 1)
+	CAFFE_FLAGS   = -gpu 0
+	OUT_DIR 	= output/gpu
+endif
+
+#======================================================
+bm_train_test:
+	${CAFFE} 	${CAFFE_CMDS} \
+						${CAFFE_FLAGS} \
+						-model=${BM_DIR}/${BM_NET} 2>&1 | tee ${OUT_DIR}/${BM_NAME}_train_test.log
+
+bm_train:
+	${CAFFE} ${CAFFE_CMDS} \
+					 ${CAFFE_FLAGS} \
+					 -solver=${BM_DIR}/${BM_NET} 2>&1 | tee ${OUT_DIR}/${BM_NAME}_train.log
+
+#======================================================
+mnist:
+	examples/mnist/create_mnist.sh
+	rm -rf  ${BM_DIR}/lenet_iter*
+	make bm_train      BM_NAME=mnist CAFFE_CMDS=train   BM_NET=lenet_solver.prototxt
+	make bm_train_test BM_NAME=mnist CAFFE_CMDS=time    BM_NET=lenet_train_test.prototxt
+
+mnist-weight:
+	./utils/extract_weight.py  --model  ${BM_DIR}/lenet.prototxt \
+														 --weight ${BM_DIR}/lenet_iter_10000.caffemodel \
+														 --output ${OUT_DIR}/mnist_lenet.weight \
+                             --type   a
+mnist-draw:
+	
+cifar10:
+	make bm_train      BM_NAME=cifar10 CAFFE_CMDS=train BM_NET=cifar10_full_solver.prototxt
+	make bm_train_test BM_NAME=cifar10 CAFFE_CMDS=time  BM_NET=cifar10_full_train_test.prototxt
+
